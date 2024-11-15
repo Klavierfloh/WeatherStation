@@ -1,0 +1,111 @@
+Instruction to setup raspberry with
+MQTT, InfluxDB, Node-RED and Grafana 
+for RS-485 Communication
+thx to: 
+https://www.superhouse.tv/41-datalogging-with-mqtt-node-red-influxdb-and-grafana/
+https://www.instructables.com/Node-RED-RS485-Raspberry-Pi-Tutorial/
+---------------------------------------------
+> create SD with Raspberry Pi OS (Lite)
+> create file "ssh" on "boot" partition
+> (setup htw network config)
+> login via ssh (putty/powershell) [user: pi, pw: raspberry ]
+
+> run install commands on raspberry:
+
+sudo apt update
+sudo apt upgrade
+sudo reboot
+---------------------------------------------
+> Step 1: Install MQTT
+---------------------------------------------
+sudo apt install mosquitto mosquitto-clients
+> protect mqtt (set password)
+echo "mqtt_username:mqtt_password" > pwfile
+mosquitto_passwd -U pwfile
+cat pwfile
+sudo mv pwfile /etc/mosquitto/
+> configure mosquito 
+# sudo nano /etc/mosquitto/mosquitto.conf
+# better save config to /etc/mosquitto/conf.d
+sudo nano /usr/share/doc/mosquitto/examples/mosquitto.conf
+> add these lines:
+	allow_anonymous false
+	password_file /etc/mosquitto/pwfile
+> exit and save file to /etc/mosquitto/conf.d/mymosquitto.conf
+> restart mqtt
+sudo /etc/init.d/mosquitto restart
+
+--------------------------------------------
+> Step 2: Install the InfluxDB time-series database
+--------------------------------------------
+> fetching the official repository key
+wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+> show OS version: lsb_release -a
+> add the repository...
+# For Raspbian Buster:
+echo "deb https://repos.influxdata.com/debian buster stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+# For Ubuntu 20.04LTS:
+# echo "deb https://repos.influxdata.com/ubuntu focal stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+> update the list of packages that are available:
+sudo apt update
+> install the database package:
+sudo apt install influxdb
+> enable InfluxDB at startup:
+sudo systemctl unmask influxdb
+sudo systemctl enable influxdb
+> Start InfluxDB manually one time
+sudo systemctl start influxdb
+> set up access control for InfluxDB
+> connect
+influx
+> create user with password
+CREATE USER admin WITH PASSWORD 'adminpassword' WITH ALL PRIVILEGES
+exit
+> adapt influx config
+sudo nano /etc/influxdb/influxdb.conf
+> Press CTRL+W to search for the section called [HTTP]. change and activate settings:
+	auth-enabled = true
+	pprof-enabled = true
+	pprof-auth-enabled = true
+	ping-auth-enabled = true
+>    save and exit (CTRL+X, then Y, then ENTER)
+> restart influxdb manually:
+sudo systemctl restart influxdb
+> test connection
+influx -username admin -password <adminpassword>
+> create a database where we can store data. for example call the database “rsdata”:
+CREATE DATABASE rsdata
+exit
+--------------------------------------------------
+Step 3: Install Node-RED
+# the Node-RED team recommend that you do NOT use the packaged version
+--------------------------------------------------
+> install the tools needed by NPM
+sudo apt install build-essential git
+> run the official Node-RED installation script:
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+Say "y" (yes) to both questions
+> connect Node-RED to your InfluxDB database (use NPM):
+npm install node-red-contrib-influxdb
+> configure it to be automatically started on boot:
+sudo systemctl enable nodered.service
+> start the service manually this time
+sudo systemctl start nodered.service
+---------------------------------------------------
+Step 4: Install Grafana
+---------------------------------------------------
+> adding the official repository and installing the package
+> (first fetching the public key for the repository and adding it to the local keyring):
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+> Now add the repository itself:
+echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+> Update the package list (again!) and install the Grafana:
+sudo apt update
+sudo apt install grafana
+> enable the service to start automatically:
+sudo systemctl enable grafana-server
+> start grafana manually:
+sudo systemctl start grafana-server
+> check grafana under http://localhost:3000
+
+

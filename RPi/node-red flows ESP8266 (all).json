@@ -1,0 +1,348 @@
+[
+    {
+        "id": "fb7e87b15d11beab",
+        "type": "tab",
+        "label": "Flow BME280-Test",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "a78bf88bd3a3565b",
+        "type": "tab",
+        "label": "MQTT-Test",
+        "disabled": true,
+        "info": ""
+    },
+    {
+        "id": "90ddfb70d1d5594a",
+        "type": "serial-port",
+        "serialport": "/dev/ttyUSB0",
+        "serialbaud": "19200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "f5e961916906f7a1",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "cc01bda784d290b5",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "localhost/influxdb",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "1.8-flux",
+        "url": "http://localhost:8086",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "ed77cf3033f04b9f",
+        "type": "mqtt in",
+        "z": "fb7e87b15d11beab",
+        "name": "",
+        "topic": "+/topBME280",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "f5e961916906f7a1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 90,
+        "y": 280,
+        "wires": [
+            [
+                "306ee87ba787276a",
+                "de43921dfdf50ae3"
+            ]
+        ]
+    },
+    {
+        "id": "306ee87ba787276a",
+        "type": "debug",
+        "z": "fb7e87b15d11beab",
+        "name": "mqtt out",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "5e1fd11024aa3f73",
+        "type": "influxdb out",
+        "z": "fb7e87b15d11beab",
+        "influxdb": "cc01bda784d290b5",
+        "name": "writedatatoinflux",
+        "measurement": "bme280_1",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "sensor",
+        "precisionV18FluxV20": "s",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "sensor",
+        "x": 520,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "de43921dfdf50ae3",
+        "type": "change",
+        "z": "fb7e87b15d11beab",
+        "name": "prepare fields",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[\t    {\t        \"timestamp\" : payload.clock,\t        \"temperature\": payload.temp,\t        \"humidity\": payload.humi,\t        \"pressure\": payload.press\t    }\t]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 300,
+        "y": 320,
+        "wires": [
+            [
+                "673fb0cf05fed090",
+                "5e1fd11024aa3f73"
+            ]
+        ]
+    },
+    {
+        "id": "0309f9c6983f34ee",
+        "type": "mqtt in",
+        "z": "a78bf88bd3a3565b",
+        "name": "",
+        "topic": "+/test",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "f5e961916906f7a1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 70,
+        "y": 140,
+        "wires": [
+            [
+                "39468cc756762d5b",
+                "f0ee1a155f0c9314"
+            ]
+        ]
+    },
+    {
+        "id": "39468cc756762d5b",
+        "type": "debug",
+        "z": "a78bf88bd3a3565b",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 250,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "a98e3cfbac6d332b",
+        "type": "influxdb out",
+        "z": "a78bf88bd3a3565b",
+        "influxdb": "cc01bda784d290b5",
+        "name": "writedatatoinflux",
+        "measurement": "temperature",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "sensor",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "sensor",
+        "x": 520,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "f0ee1a155f0c9314",
+        "type": "change",
+        "z": "a78bf88bd3a3565b",
+        "name": "str2num",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$number(payload) ",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 260,
+        "y": 200,
+        "wires": [
+            [
+                "b56cf2ba5d851805",
+                "a98e3cfbac6d332b"
+            ]
+        ]
+    },
+    {
+        "id": "b56cf2ba5d851805",
+        "type": "debug",
+        "z": "a78bf88bd3a3565b",
+        "name": "num",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 510,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "673fb0cf05fed090",
+        "type": "debug",
+        "z": "fb7e87b15d11beab",
+        "name": "prepared",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "2366ee0c75a776e3",
+        "type": "mqtt in",
+        "z": "a78bf88bd3a3565b",
+        "name": "",
+        "topic": "+/topBME280",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "f5e961916906f7a1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 90,
+        "y": 80,
+        "wires": [
+            [
+                "9f7cdc2e027ab772"
+            ]
+        ]
+    },
+    {
+        "id": "9f7cdc2e027ab772",
+        "type": "debug",
+        "z": "a78bf88bd3a3565b",
+        "name": "mqtt msg",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "b9ca428df3dd05ea",
+        "type": "function",
+        "z": "a78bf88bd3a3565b",
+        "name": "clock2unixtime",
+        "func": "var d = new Date(msg.payload.clock);\nmsg.payload.unixtime=d.getTime()*1000000;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 100,
+        "y": 340,
+        "wires": [
+            [
+                "d165af311edf0b69"
+            ]
+        ]
+    },
+    {
+        "id": "d165af311edf0b69",
+        "type": "debug",
+        "z": "a78bf88bd3a3565b",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload.unixtime",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 340,
+        "wires": []
+    }
+]
